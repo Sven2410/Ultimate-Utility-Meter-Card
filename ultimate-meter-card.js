@@ -3,7 +3,7 @@
  * A custom Lovelace card for Home Assistant
  * Displays electricity meter readings (delivered/returned, low/high tariff) and optional gas
  *
- * Version: 1.0.1
+ * Version: 1.0.2
  */
 
 /* ============================================================
@@ -435,7 +435,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c ULTIMATE-METER-CARD %c v1.0.1 ",
+  "%c ULTIMATE-METER-CARD %c v1.0.2 ",
   "color:#fff;background:#2196F3;font-weight:bold;padding:2px 6px;border-radius:4px 0 0 4px;",
   "color:#2196F3;background:#f0f0f0;font-weight:bold;padding:2px 6px;border-radius:0 4px 4px 0;"
 );
