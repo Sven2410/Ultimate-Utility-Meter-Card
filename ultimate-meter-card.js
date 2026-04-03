@@ -3,7 +3,7 @@
  * A custom Lovelace card for Home Assistant
  * Displays electricity meter readings (delivered/returned, low/high tariff) and optional gas
  *
- * Version: 1.0.0
+ * Version: 1.0.1
  */
 
 /* ============================================================
@@ -83,11 +83,6 @@ class UltimateMeterCardEditor extends HTMLElement {
         }
       </style>
 
-      <div class="row">
-        <label>Naam (optioneel)</label>
-        <ha-textfield id="name" placeholder="Bijv. Meterstanden"></ha-textfield>
-      </div>
-
       <div class="section-title">Geleverd</div>
 
       <div class="row">
@@ -112,8 +107,8 @@ class UltimateMeterCardEditor extends HTMLElement {
 
       <div class="section-title">Gas</div>
 
-      <div class="toggle-row">
-        <label>Gebruik je gas?</label>
+      <div class="toggle-row" id="gasToggleRow" style="cursor:pointer;">
+        <label style="cursor:pointer;">Gebruik je gas?</label>
         <div class="toggle-switch">
           <input type="checkbox" id="show_gas">
           <span class="toggle-slider"></span>
@@ -125,14 +120,6 @@ class UltimateMeterCardEditor extends HTMLElement {
         <ha-entity-picker id="gas_entity" allow-custom-entity></ha-entity-picker>
       </div>
     `;
-
-    // --- Wire name ---
-    const nameField = this.shadowRoot.getElementById("name");
-    nameField.value = this._val("name");
-    nameField.addEventListener("change", (ev) => {
-      this._config = { ...this._config, name: ev.target.value };
-      this._fireChanged();
-    });
 
     // --- Wire entity pickers ---
     const fields = ["delivered_low", "delivered_high", "returned_low", "returned_high", "gas_entity"];
@@ -151,8 +138,16 @@ class UltimateMeterCardEditor extends HTMLElement {
 
     // --- Wire gas toggle ---
     const gasToggle = this.shadowRoot.getElementById("show_gas");
+    const gasToggleRow = this.shadowRoot.getElementById("gasToggleRow");
     gasToggle.checked = this._val("show_gas", false);
     this._toggleGasRow(gasToggle.checked);
+
+    // Click anywhere on the row to toggle
+    gasToggleRow.addEventListener("click", (e) => {
+      if (e.target === gasToggle) return; // let native checkbox handle itself
+      gasToggle.checked = !gasToggle.checked;
+      gasToggle.dispatchEvent(new Event("change"));
+    });
     gasToggle.addEventListener("change", () => {
       this._config = { ...this._config, show_gas: gasToggle.checked };
       this._toggleGasRow(gasToggle.checked);
@@ -168,9 +163,6 @@ class UltimateMeterCardEditor extends HTMLElement {
   }
 
   _updateValues() {
-    const nameField = this.shadowRoot.getElementById("name");
-    if (nameField) nameField.value = this._val("name");
-
     ["delivered_low", "delivered_high", "returned_low", "returned_high", "gas_entity"].forEach((key) => {
       const picker = this.shadowRoot.getElementById(key);
       if (picker) picker.value = this._val(key);
@@ -212,7 +204,6 @@ class UltimateMeterCard extends HTMLElement {
 
   static getStubConfig() {
     return {
-      name: "Meterstanden",
       delivered_low: "",
       delivered_high: "",
       returned_low: "",
@@ -243,11 +234,6 @@ class UltimateMeterCard extends HTMLElement {
 
     this.shadowRoot.innerHTML = `
       <div class="mc">
-        <div class="header">
-          <ha-icon icon="mdi:meter-electric-outline" style="--mdc-icon-size:20px;color:rgba(255,255,255,0.5);display:flex;"></ha-icon>
-          <span class="ht" id="cardTitle">Meterstanden</span>
-        </div>
-
         <div class="section">
           <div class="col">
             <div class="ch">
@@ -292,7 +278,6 @@ class UltimateMeterCard extends HTMLElement {
     `;
 
     this._els = {
-      cardTitle: this.shadowRoot.getElementById("cardTitle"),
       valDL: this.shadowRoot.getElementById("valDL"),
       valDH: this.shadowRoot.getElementById("valDH"),
       valRL: this.shadowRoot.getElementById("valRL"),
@@ -318,17 +303,6 @@ class UltimateMeterCard extends HTMLElement {
           0 2px 6px rgba(0,0,0,.45);
         padding: 16px 20px;
         font-family: var(--primary-font-family, sans-serif);
-      }
-      .header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 14px;
-      }
-      .ht {
-        font-size: 15px;
-        font-weight: 800;
-        color: rgba(255,255,255,0.92);
       }
       .section {
         display: flex;
@@ -406,9 +380,6 @@ class UltimateMeterCard extends HTMLElement {
   _update() {
     if (!this._els || !this._hass) return;
 
-    // Title
-    this._els.cardTitle.textContent = this._config.name || "Meterstanden";
-
     // Electricity values
     this._els.valDL.textContent = this._fmtKwh(this._config.delivered_low);
     this._els.valDH.textContent = this._fmtKwh(this._config.delivered_high);
@@ -464,7 +435,7 @@ window.customCards.push({
 });
 
 console.info(
-  "%c ULTIMATE-METER-CARD %c v1.0.0 ",
+  "%c ULTIMATE-METER-CARD %c v1.0.1 ",
   "color:#fff;background:#2196F3;font-weight:bold;padding:2px 6px;border-radius:4px 0 0 4px;",
   "color:#2196F3;background:#f0f0f0;font-weight:bold;padding:2px 6px;border-radius:0 4px 4px 0;"
 );
